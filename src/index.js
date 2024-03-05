@@ -1,7 +1,7 @@
 module.exports = (config) => {
-    config = vKit.isObject(config) ? config : {}
     (async () => {
         require("@vstudio/vital.network")
+        config = vKit.isObject(config) ? config : {}
         vKit.print("\x1b[33m━ Assetify (Server) | Launching...")
         let Assetify = vNetwork.create({
             port: vKit.Number(config.port) || 33022,
