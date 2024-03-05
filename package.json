@@ -1,0 +1,42 @@
+{
+    "name": "@vstudio/assetify.webserver",
+    "version": "1.0.0",
+    "author": "ᴏᴠ <crazynuggets@outlook.com> (https://github.com/ov-studio)",
+    "private": false,
+    "license": "GPL-3.0",
+    "description": "Assetify's Webserver",
+    "homepage": "https://github.com/ov-sa/Assetify-Webserver#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/ov-sa/Assetify-Webserver.git"
+    },
+    "bugs": {
+        "url": "https://github.com/ov-sa/Assetify-Webserver/issues"
+    },
+    "keywords": [
+        "ov",
+        "v-studio",
+        "vital",
+        "v-kit",
+        "v-network",
+        "v-engine",
+        "web-dev",
+        "game-dev",
+        "engine-dev",
+        "lightweight",
+        "library",
+        "interface",
+        "toolkit",
+        "networker",
+        "networking",
+        "networkify",
+        "communication",
+        "socket",
+        "rest",
+        "assetify"
+    ],
+    "main": "./src",
+    "dependencies": {
+        "@vstudio/vital.network": "^1.0.4"
+    }
+}
