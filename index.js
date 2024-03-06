@@ -1,0 +1,1 @@
+require("@vstudio/assetify.webserver")()
