@@ -13,7 +13,7 @@ Assetify.rest.create("post", "onSetConnection", (request, response) => {
 Assetify.rest.create("post", "onSyncPeer", (request, response) => {
     const requestIP = getIP(request.ip)
     request = request.body[0]
-    if (!cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.peer) return response.status(401).send({status: false})
+    if (!request || !cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.peer) return response.status(401).send({status: false})
     if (request.state) cache[requestIP].peer[(request.peer)] = true
     else delete cache[requestIP].peer[(request.peer)]
     response.status(200).send({status: true})
@@ -23,7 +23,7 @@ Assetify.rest.create("post", "onSyncPeer", (request, response) => {
 Assetify.rest.create("post", "onSyncContent", (request, response) => {
     const requestIP = getIP(request.ip)
     request = request.body[0]
-    if (!cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.path || !request.content) return response.status(401).send({status: false})
+    if (!request || !cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.path || !request.content) return response.status(401).send({status: false})
     cache[requestIP].content[(request.path)] = cache[requestIP].content[(request.path)] || {}
     cache[requestIP].content[(request.path)].sync = new Promise((resolve) => cache[requestIP].content[(request.path)].sync_resolve = resolve)
     cache[requestIP].content[(request.path)].buffer = (cache[requestIP].content[(request.path)].buffer || "") + request.content
@@ -39,7 +39,7 @@ Assetify.rest.create("get", "onFetchContent", async (request, response) => {
     var [_, query] = request.url.split("?")
     request = vKit.query.parse(query)
     let requestIP = false
-    if (request.token) {
+    if (request && request.token) {
         for (let i in cache) {
             if (request.token == cache[i].token) {
                 requestIP = i
@@ -47,7 +47,7 @@ Assetify.rest.create("get", "onFetchContent", async (request, response) => {
             }
         }
     }
-    if (!requestIP || !request.peer || !cache[requestIP].peer[(request.peer)] || !request.path || !cache[requestIP].content[(request.path)]) return response.status(401).send({status: false})
+    if (!request || !requestIP || !request.peer || !cache[requestIP].peer[(request.peer)] || !request.path || !cache[requestIP].content[(request.path)]) return response.status(401).send({status: false})
     await cache[requestIP].content[(request.path)].sync
     response.status(200).send(cache[requestIP].content[(request.path)].buffer)
 })
