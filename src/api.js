@@ -36,11 +36,12 @@ Assetify.rest.create("post", "onSyncContent", (request, response) => {
 })
 
 Assetify.rest.create("get", "onFetchContent", async (request, response) => {
-    request = request.body[0]
+    var [_, query] = request.url.split("?")
+    request = vKit.query.parse(query)
     let requestIP = false
     if (request.token) {
         for (let i in cache) {
-            if (request.token == cache.token) {
+            if (request.token == cache[i].token) {
                 requestIP = i
                 break
             }
