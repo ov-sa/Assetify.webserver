@@ -26,7 +26,7 @@ Assetify.rest.create("post", "onSyncContent", (request, response) => {
     if (!cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.path || !request.content) return response.status(401).send({status: false})
     cache[requestIP].content[(request.path)] = cache[requestIP].content[(request.path)] || {}
     cache[requestIP].content[(request.path)].sync = new Promise((resolve) => cache[requestIP].content[(request.path)].sync_resolve = resolve)
-    cache[requestIP].content[(request.path)].buffer = (cache[requestIP].content[(request.path)].buffer ? "" : cache[requestIP].content[(request.path)].buffer) + request.content
+    cache[requestIP].content[(request.path)].buffer = (cache[requestIP].content[(request.path)].buffer || "") + request.content
     if (request.chunk[0] == request.chunk[1]) {
         cache[requestIP].content[(request.path)].sync_resolve()
         delete cache[requestIP].content[(request.path)].sync_resolve
