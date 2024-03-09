@@ -12,8 +12,10 @@ Assetify.rest.create("post", "onSetConnection", (request, response) => {
         }
     }
     else {
-        trash[requestIP] = {content: cache[requestIP].content}
-        trash[requestIP].expiry = vKit.scheduleExec(() => delete trash[requestIP], 30*60*1000)
+        if (cache[requestIP]) {
+            trash[requestIP] = {content: cache[requestIP].content}
+            trash[requestIP].expiry = vKit.scheduleExec(() => delete trash[requestIP], 30*60*1000)
+        }
         delete cache[requestIP]
     }
     response.status(200).send({status: true, token: cache[requestIP] ? cache[requestIP].token : null})
@@ -34,7 +36,9 @@ Assetify.rest.create("post", "onVerifyContent", (request, response) => {
     const requestIP = getIP(request.ip)
     request = request.body[0]
     if (!request || !cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.path || !request.hash) return response.status(401).send({status: false})
-    response.status(200).send({status: cache[requestIP].content[(request.path)] && (request.hash.toLowerCase() == vKit.crypto.createHash("sha256").update(cache[requestIP].content[(request.path)].buffer).digest("hex").toLowerCase()) ? true : false})
+    let isVerified = cache[requestIP].content[(request.path)] && (request.hash.toLowerCase() == vKit.crypto.createHash("sha256").update(cache[requestIP].content[(request.path)].buffer).digest("hex").toLowerCase()) ? true : false
+    if (!isVerified) delete cache[requestIP].content[(request.path)]
+    response.status(200).send({status: isVerified})
 })
 
 Assetify.rest.create("post", "onSyncContent", (request, response) => {
