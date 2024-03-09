@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@vstudio/assetify.webserver": "^2.0.2"
+    "@vstudio/assetify.webserver": "^2.0.3"
   }
 }
