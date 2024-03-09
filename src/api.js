@@ -30,11 +30,11 @@ Assetify.rest.create("post", "onSyncPeer", (request, response) => {
     vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mPeer: ${request.peer} ${request.state ? "connected" : "disconnected"}. \x1b[33m[Server: ${requestIP}]\x1b[37m`)
 })
 
-Assetify.rest.create("post", "onSyncVerify", (request, response) => {
+Assetify.rest.create("post", "onVerifyContent", (request, response) => {
     const requestIP = getIP(request.ip)
     request = request.body[0]
     if (!request || !cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.path || !request.hash) return response.status(401).send({status: false})
-    response.status(200).send({status: cache[requestIP].content[(request.path)] && (request.hash.toLowerCase() == vKit.crypto.createHash("sha256").update(cache[requestIP].content[(request.path)]).digest("hex").toLowerCase()) ? true : false})
+    response.status(200).send({status: cache[requestIP].content[(request.path)] && (request.hash.toLowerCase() == vKit.crypto.createHash("sha256").update(cache[requestIP].content[(request.path)].buffer).digest("hex").toLowerCase()) ? true : false})
 })
 
 Assetify.rest.create("post", "onSyncContent", (request, response) => {
