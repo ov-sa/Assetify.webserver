@@ -37,6 +37,6 @@
     ],
     "main": "./src",
     "dependencies": {
-        "@vstudio/vital.network": "^1.0.8"
+        "@vstudio/vital.network": "^1.0.9"
     }
 }
