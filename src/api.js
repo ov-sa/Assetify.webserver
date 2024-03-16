@@ -25,7 +25,7 @@ Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
     })
 })
 
-Assetify.rest.create("post", "onSyncPeer", (request, response) => {
+Assetify.rest.create("post", "onSyncPeer", (request, response, stream) => {
     var [_, query] = request.url.split("?")
     const requestIP = getIP(request.ip)
     request = vKit.query.parse(query)
