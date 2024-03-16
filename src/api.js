@@ -4,7 +4,7 @@ let getIP = (ip) => ip ? ip?.replace(/^.*:/, '') : false
 Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
     const requestIP = getIP(request.ip)
     let streamed = {}
-    stream.on("field", (name, value) => {streamed[name] = value})
+    stream.on("field", (index, value) => {streamed[index] = value})
     stream.on("close", () => {
         if (streamed.state) {
             cache[requestIP] = {token: vKit.vid.create(), peer: {}, content: trash[requestIP] ? trash[requestIP].content : {}}
@@ -26,13 +26,19 @@ Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
 })
 
 Assetify.rest.create("post", "onSyncPeer", (request, response) => {
+    var [_, query] = request.url.split("?")
     const requestIP = getIP(request.ip)
-    request = request.body[0]
-    if (!request || !cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.peer) return response.status(401).send(false)
-    if (request.state) cache[requestIP].peer[(request.peer)] = true
-    else delete cache[requestIP].peer[(request.peer)]
-    response.status(200).send(true)
-    vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mPeer: ${request.peer} ${request.state ? "connected" : "disconnected"}. \x1b[33m[Server: ${requestIP}]\x1b[37m`)
+    request = vKit.query.parse(query)
+    let streamed = {}
+    stream.on("field", (index, value) => {streamed[index] = value})
+    stream.on("close", () => {
+        if (!cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !streamed.peer) return response.status(401).send(false)
+        if (streamed.state) cache[requestIP].peer[(streamed.peer)] = true
+        else delete cache[requestIP].peer[(streamed.peer)]
+        response.status(200).send(true)
+        vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mPeer: ${streamed.peer} ${streamed.state ? "connected" : "disconnected"}. \x1b[33m[Server: ${requestIP}]\x1b[37m`)
+    })
+
 })
 
 Assetify.rest.create("post", "onVerifyContent", (request, response, stream) => {
@@ -40,7 +46,7 @@ Assetify.rest.create("post", "onVerifyContent", (request, response, stream) => {
     const requestIP = getIP(request.ip)
     request = vKit.query.parse(query)
     let streamed = {}
-    stream.on("field", (name, value) => {streamed[name] = value})
+    stream.on("field", (index, value) => {streamed[index] = value})
     stream.on("close", () => {
         if (!cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !streamed.path || !streamed.hash) return response.status(401).send(false)
         let isVerified = cache[requestIP].content[(streamed.path)] && (streamed.hash.toLowerCase() == vKit.crypto.createHash("sha256").update(cache[requestIP].content[(streamed.path)]).digest("hex").toLowerCase()) ? true : false
@@ -54,7 +60,7 @@ Assetify.rest.create("post", "onSyncContent", (request, response, stream) => {
     const requestIP = getIP(request.ip)
     request = vKit.query.parse(query)
     let streamed = {}
-    stream.on("field", (name, value) => {streamed[name] = value})
+    stream.on("field", (index, value) => {streamed[index] = value})
     stream.on("close", () => {
         if (!cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !streamed.path || !streamed.content) return response.status(401).send(false)
         cache[requestIP].content[(streamed.path)] = streamed.content
@@ -75,7 +81,7 @@ Assetify.rest.create("get", "onFetchContent", async (request, response) => {
             }
         }
     }
-    if (!request || !requestIP || !request.peer || !cache[requestIP].peer[(request.peer)] || !request.path || !cache[requestIP].content[(request.path)]) return response.status(401).send(false)
+    if (!requestIP || !request.peer || !cache[requestIP].peer[(request.peer)] || !request.path || !cache[requestIP].content[(request.path)]) return response.status(401).send(false)
     await cache[requestIP].content[(request.path)].sync
     response.status(200).send(cache[requestIP].content[(request.path)])
 })
