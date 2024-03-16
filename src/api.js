@@ -1,25 +1,28 @@
 let cache = {}, trash = {}
 let getIP = (ip) => ip ? ip?.replace(/^.*:/, '') : false
 
-Assetify.rest.create("post", "onSetConnection", (request, response) => {
+Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
     const requestIP = getIP(request.ip)
-    request = request.body[0]
-    if (request) {
-        cache[requestIP] = {token: vKit.vid.create(), peer: {}, content: trash[requestIP] ? trash[requestIP].content : {}}
-        if (trash[requestIP]) {
-            clearTimeout(trash[requestIP].expiry)
-            delete trash[requestIP]
+    let streamed = {}
+    stream.on("field", (name, value) => {streamed[name] = value})
+    stream.on("close", () => {
+        if (stream.state) {
+            cache[requestIP] = {token: vKit.vid.create(), peer: {}, content: trash[requestIP] ? trash[requestIP].content : {}}
+            if (trash[requestIP]) {
+                clearTimeout(trash[requestIP].expiry)
+                delete trash[requestIP]
+            }
         }
-    }
-    else {
-        if (cache[requestIP]) {
-            trash[requestIP] = {content: cache[requestIP].content}
-            trash[requestIP].expiry = vKit.scheduleExec(() => delete trash[requestIP], 30*60*1000)
+        else {
+            if (cache[requestIP]) {
+                trash[requestIP] = {content: cache[requestIP].content}
+                trash[requestIP].expiry = vKit.scheduleExec(() => delete trash[requestIP], 30*60*1000)
+            }
+            delete cache[requestIP]
         }
-        delete cache[requestIP]
-    }
-    response.status(200).send({status: true, token: cache[requestIP] ? cache[requestIP].token : null})
-    vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mServer: ${requestIP} ${cache[requestIP] ? "connected" : "disconnected"}.\x1b[37m`)
+        response.status(200).send({status: true, token: cache[requestIP] ? cache[requestIP].token : null})
+        vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mServer: ${requestIP} ${cache[requestIP] ? "connected" : "disconnected"}.\x1b[37m`)
+    })
 })
 
 Assetify.rest.create("post", "onSyncPeer", (request, response) => {
