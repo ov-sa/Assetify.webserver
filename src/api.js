@@ -6,7 +6,7 @@ Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
     let streamed = {}
     stream.on("field", (index, value) => {streamed[index] = value})
     stream.on("close", () => {
-        if (streamed.state) {
+        if (streamed.state == true) {
             cache[requestIP] = {token: vKit.vid.create(), peer: {}, content: trash[requestIP] ? trash[requestIP].content : {}}
             if (trash[requestIP]) {
                 clearTimeout(trash[requestIP].expiry)
@@ -33,10 +33,10 @@ Assetify.rest.create("post", "onSyncPeer", (request, response, stream) => {
     stream.on("field", (index, value) => {streamed[index] = value})
     stream.on("close", () => {
         if (!cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !streamed.peer) return response.status(401).send(false)
-        if (streamed.state) cache[requestIP].peer[(streamed.peer)] = true
+        if (streamed.state == true) cache[requestIP].peer[(streamed.peer)] = true
         else delete cache[requestIP].peer[(streamed.peer)]
         response.status(200).send(true)
-        vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mPeer: ${streamed.peer} ${streamed.state ? "connected" : "disconnected"}. \x1b[33m[Server: ${requestIP}]\x1b[37m`)
+        vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mPeer: ${streamed.peer} ${cache[requestIP].peer[(streamed.peer)] ? "connected" : "disconnected"}. \x1b[33m[Server: ${requestIP}]\x1b[37m`)
     })
 
 })
