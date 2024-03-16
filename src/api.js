@@ -6,7 +6,7 @@ Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
     let streamed = {}
     stream.on("field", (name, value) => {streamed[name] = value})
     stream.on("close", () => {
-        if (stream.state) {
+        if (streamed.state) {
             cache[requestIP] = {token: vKit.vid.create(), peer: {}, content: trash[requestIP] ? trash[requestIP].content : {}}
             if (trash[requestIP]) {
                 clearTimeout(trash[requestIP].expiry)
@@ -20,7 +20,7 @@ Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
             }
             delete cache[requestIP]
         }
-        response.status(200).send({status: true, token: cache[requestIP] ? cache[requestIP].token : null})
+        response.status(200).send(cache[requestIP].token)
         vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mServer: ${requestIP} ${cache[requestIP] ? "connected" : "disconnected"}.\x1b[37m`)
     })
 })
@@ -28,35 +28,39 @@ Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
 Assetify.rest.create("post", "onSyncPeer", (request, response) => {
     const requestIP = getIP(request.ip)
     request = request.body[0]
-    if (!request || !cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.peer) return response.status(401).send({status: false})
+    if (!request || !cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.peer) return response.status(401).send(false)
     if (request.state) cache[requestIP].peer[(request.peer)] = true
     else delete cache[requestIP].peer[(request.peer)]
-    response.status(200).send({status: true})
+    response.status(200).send(true)
     vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mPeer: ${request.peer} ${request.state ? "connected" : "disconnected"}. \x1b[33m[Server: ${requestIP}]\x1b[37m`)
 })
 
-Assetify.rest.create("post", "onVerifyContent", (request, response) => {
+Assetify.rest.create("post", "onVerifyContent", (request, response, stream) => {
+    var [_, query] = request.url.split("?")
     const requestIP = getIP(request.ip)
-    request = request.body[0]
-    if (!request || !cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.path || !request.hash) return response.status(401).send({status: false})
-    let isVerified = cache[requestIP].content[(request.path)] && (request.hash.toLowerCase() == vKit.crypto.createHash("sha256").update(cache[requestIP].content[(request.path)].buffer).digest("hex").toLowerCase()) ? true : false
-    if (!isVerified) delete cache[requestIP].content[(request.path)]
-    response.status(200).send({status: isVerified})
+    request = vKit.query.parse(query)
+    let streamed = {}
+    stream.on("field", (name, value) => {streamed[name] = value})
+    stream.on("close", () => {
+        if (!cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !streamed.path || !streamed.hash) return response.status(401).send(false)
+        let isVerified = cache[requestIP].content[(streamed.path)] && (streamed.hash.toLowerCase() == vKit.crypto.createHash("sha256").update(cache[requestIP].content[(streamed.path)]).digest("hex").toLowerCase()) ? true : false
+        if (!isVerified) delete cache[requestIP].content[(streamed.path)]
+        response.status(200).send(isVerified)
+    })
 })
 
-Assetify.rest.create("post", "onSyncContent", (request, response) => {
+Assetify.rest.create("post", "onSyncContent", (request, response, stream) => {
+    var [_, query] = request.url.split("?")
     const requestIP = getIP(request.ip)
-    request = request.body[0]
-    if (!request || !cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !request.path || !request.content) return response.status(401).send({status: false})
-    cache[requestIP].content[(request.path)] = cache[requestIP].content[(request.path)] || {}
-    cache[requestIP].content[(request.path)].sync = new Promise((resolve) => cache[requestIP].content[(request.path)].sync_resolve = resolve)
-    cache[requestIP].content[(request.path)].buffer = (cache[requestIP].content[(request.path)].buffer || "") + request.content
-    if (request.chunk[0] == request.chunk[1]) {
-        cache[requestIP].content[(request.path)].sync_resolve()
-        delete cache[requestIP].content[(request.path)].sync_resolve
-        vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mContent: ${request.path} synced. \x1b[33m[Server: ${requestIP}]\x1b[37m`)
-    }
-    response.status(200).send({status: true})
+    request = vKit.query.parse(query)
+    let streamed = {}
+    stream.on("field", (name, value) => {streamed[name] = value})
+    stream.on("close", () => {
+        if (!cache[requestIP] || !request.token || (request.token != cache[requestIP].token) || !streamed.path || !streamed.content) return response.status(401).send(false)
+        cache[requestIP].content[(streamed.path)] = streamed.content
+        vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mContent: ${streamed.path} synced. \x1b[33m[Server: ${requestIP}]\x1b[37m`)
+        response.status(200).send(true)
+    })
 })
 
 Assetify.rest.create("get", "onFetchContent", async (request, response) => {
@@ -71,7 +75,7 @@ Assetify.rest.create("get", "onFetchContent", async (request, response) => {
             }
         }
     }
-    if (!request || !requestIP || !request.peer || !cache[requestIP].peer[(request.peer)] || !request.path || !cache[requestIP].content[(request.path)]) return response.status(401).send({status: false})
+    if (!request || !requestIP || !request.peer || !cache[requestIP].peer[(request.peer)] || !request.path || !cache[requestIP].content[(request.path)]) return response.status(401).send(false)
     await cache[requestIP].content[(request.path)].sync
-    response.status(200).send(cache[requestIP].content[(request.path)].buffer)
+    response.status(200).send(cache[requestIP].content[(request.path)])
 })
