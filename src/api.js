@@ -12,6 +12,7 @@ Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
                 clearTimeout(trash[requestIP].expiry)
                 delete trash[requestIP]
             }
+            response.status(200).send(cache[requestIP].token)
         }
         else {
             if (cache[requestIP]) {
@@ -19,8 +20,8 @@ Assetify.rest.create("post", "onSetConnection", (request, response, stream) => {
                 trash[requestIP].expiry = vKit.scheduleExec(() => delete trash[requestIP], 30*60*1000)
             }
             delete cache[requestIP]
+            response.status(200).send(true)
         }
-        response.status(200).send(cache[requestIP].token)
         vKit.print(`\x1b[33m━ Assetify (Server) | \x1b[32mServer: ${requestIP} ${cache[requestIP] ? "connected" : "disconnected"}.\x1b[37m`)
     })
 })
